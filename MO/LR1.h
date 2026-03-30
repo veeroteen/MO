@@ -5,6 +5,7 @@
 #include <numbers>
 #include <iostream>
 #include <iomanip>
+size_t counter = 0;
 //Дихотомия
 std::pair<double, double> Dih(std::pair<double, double> interval, double epsilon, std::function<double(double)> f, std::ostream &stream)
 {
@@ -54,7 +55,7 @@ std::pair<double, double> Gold(std::pair<double, double> interval, double epsilo
       f(newIntr.first),
       f(newIntr.second)
    };
-
+   std::cout << n << std::endl;
    for (size_t i = 0; i < n; i++)
    {
       if(funV.first < funV.second)

@@ -8,7 +8,7 @@
 #include <array>
 #include "LR1.h"
 #include <cmath>
-size_t counter = 0;
+
 
 double scalar(const std::vector<double> &a, const std::vector<double> &b)
 {
@@ -87,24 +87,20 @@ std::pair<double,double> squareInt(std::pair<double, double> interval, double ep
    f2 = f(a2);
    f3 = f(a3);
    double a = 0;
+
    while(fabs(a3-a1) > eps && f1 != f3 && fabs(f3 - f1) > eps)
    {
-
+      
       double denom = ((a2 - a1) * (f2 - f3) - (a2 - a3) * (f2 - f1));
       double numer = (pow((a2 - a1),2)* (f2 - f3) - pow((a2 - a3),2) * (f2 - f1));
       
-      if(fabs(denom) <= eps )
+      
+      double tmp = a2 - numer / (denom * 2);
+      if(fabs(tmp-a) < eps)
       {
-         a = (a1 + a3) / 2;
+         break;
       }
-      else
-      {
-         a = a2 - numer / (denom * 2);
-      }
-      if(a < a1 || a > a3 || (fabs(a - a1) < eps || fabs(a - a2) < eps || fabs(a - a3) < eps))
-      {
-         a = (a1 + a3) / 2;
-      }
+      a = tmp;
       double fr = f(a);
 
       if(a < a2)
@@ -137,7 +133,7 @@ std::pair<double,double> squareInt(std::pair<double, double> interval, double ep
             f3 = fr;
          }
       }
-
+      counter++;
    }
    return std::pair <double,double> (a2, a2);
 
@@ -172,7 +168,7 @@ std::vector<double> MSGFR
    double funt = fun(x0);
    double gg = scalar(grad,grad);
    double a = 0;
-   stream << "x" << "\t" << "y" << "\t" << "f" << "\t" << "dirX" << "\t" << "dirY" << "\t" << "lambda" << "\t" << "dx" << "\t" << "dy" << "\t" << "df" << "\t" << "phi" << "\t" << "gradX" << "\t" << "gradY" << std::endl;
+   //stream << "x" << "\t" << "y" << "\t" << "f" << "\t" << "dirX" << "\t" << "dirY" << "\t" << "lambda" << "\t" << "dx" << "\t" << "dy" << "\t" << "df" << "\t" << "phi" << "\t" << "gradX" << "\t" << "gradY" << std::endl;
 
    do
    {
@@ -253,10 +249,7 @@ std::vector<double> MSGFR
       stream << std::endl;
    }
    while (gg > eps* eps && maxI > k);
-   stream << std::endl;
-   stream << std::endl;
-   stream << std::endl;
-   stream << std::endl;
+
    for (auto &i : cur)
    {
       stream << std::setprecision(16) << i << "\t";
@@ -274,7 +267,6 @@ std::vector<double> MSGFR
       stream << std::setprecision(16) << i << "\t";
    }
    stream << std::endl;
-   stream << "iteration count: " << k << std::endl;
    return cur;
 
 
@@ -327,18 +319,17 @@ std::vector<double> Broiden
          }
          return fun(arg);
       };
-   
+   //stream << "x" << "\t" << "y" << "\t" << "f" << "\t" << "dirX" << "\t" << "dirY" << "\t" << "lambda" << "\t" << "dx" << "\t" << "dy" << "\t" << "df" << "\t" << "phi" << "\t" << "gradX" << "\t" << "gradY" << std::endl;
    while(scalar(grad,grad) > eps* eps && maxI > k)
    {
       for(auto &a : cur)
       {
          stream << std::setprecision(16) << a << "\t";
       }
-      for (auto &a : grad)
-      {
-         stream << std::setprecision(16) << a << "\t";
-      }
-      stream << std::endl;
+      double func = fun(cur);
+      stream << std::setprecision(16) << func << "\t";
+
+      
       k++;
 
       Ax(B, grad, direct);
@@ -347,21 +338,41 @@ std::vector<double> Broiden
          a = -a;
       }
 
+      for (auto &a : direct)
+      {
+         stream << std::setprecision(16) << a << "\t";
+      }
+
       std::pair<double, double> interval = findInterval(layer, 0.5);
       double a = squareInt(interval, leps, layer).second;
-
+      stream << std::setprecision(16) << a << "\t";
       std::vector < double> s(size, 0);
-
+      
+      double phi = acos(scalar(direct, cur) / (sqrt(scalar(direct, direct)) * sqrt(scalar(cur, cur))));
       for(size_t i = 0; i < size;i++)
       {
          s[i] = direct[i] * a;
          cur[i] += s[i];
       }
-      std::vector<double> y(grad);
-      if(scalar(s,s) < eps*eps)
+      for (auto &i : s)
       {
-         break;
+         stream << std::setprecision(16) << i << "\t";
       }
+      stream << std::setprecision(16) << fabs(func - fun(cur)) << "\t";
+
+      stream << std::setprecision(16) << phi << "\t";
+      for (auto &a : grad)
+      {
+         stream << std::setprecision(16) << a << "\t";
+      }
+
+      for (auto &a : B)
+      {
+         stream << std::setprecision(16) << a << "\t";
+      }
+
+      std::vector<double> y(grad);
+
       grad = gf(cur);
       for (size_t i = 0; i < size; i++)
       {
@@ -386,20 +397,27 @@ std::vector<double> Broiden
          }
       }
 
-
+      stream << std::endl;
 
 
 
    }
+
    for (auto &a : cur)
    {
       stream << std::setprecision(16) << a << "\t";
    }
+   stream << std::setprecision(16) << fun(cur) << "\t";
+
+   for (size_t i = 0; i < 7; i++)
+   {
+      stream << "-" << "\t";
+   }
+
    for (auto &a : grad)
    {
       stream << std::setprecision(16) << a << "\t";
    }
    stream << std::endl;
-   stream << "iteration count: " << k << std::endl;
    return cur;
 }
