@@ -1,3 +1,4 @@
+//LR2.h
 #pragma once
 #include <functional>
 #include <utility>
@@ -7,7 +8,65 @@
 #include <iomanip>
 #include <array>
 #include "LR1.h"
-#include <cmath>
+auto providerRB()
+{
+   auto a = std::pair
+   (
+      [](const std::vector<double> &x)
+      {
+
+         return 100 * pow((x[1] - x[0] * x[0]), 2) + pow((1 - x[0]), 2);
+      },
+      [](const std::vector<double> &x)
+      {
+         std::vector<double> grad(x.size(), 0);
+         grad[0] = -400 * (x[1] - x[0] * x[0]) * x[0] - 2 * (1 - x[0]);
+         grad[1] = 200 * (x[1] - x[0] * x[0]);
+         return grad;
+      }
+   );
+   return a;
+}
+
+auto providerBase()
+{
+   auto a = std::pair
+   (
+      [](const std::vector<double> &x)
+      {
+
+         return 100 * (x[1] - x[0]) * (x[1] - x[0]) + (1 - x[0]) * (1 - x[0]);
+      },
+      [](const std::vector<double> &x)
+      {
+         std::vector<double> grad(x.size(), 0);
+         grad[0] = -200 * (x[1] - x[0]) - 2 * (1 - x[0]);
+         grad[1] = 200 * (x[1] - x[0]);
+         return grad;
+      }
+   );
+   return a;
+}
+
+auto FUN()
+{
+   auto a = std::pair
+   (
+      [](const std::vector<double> &x)
+      {
+
+         return -(1 / (1 + pow((x[0] - 2) / 3, 2) + pow((x[1] - 2) / 3, 2)) + 3 / (1 + pow((x[0] - 1) / 1, 2) + pow((x[1] - 1) / 2, 2)));
+      },
+      [](const std::vector<double> &x)
+      {
+         std::vector<double> grad(x.size(), 0);
+         grad[0] = -(-1 * 2 * ((x[0] - 2) / 3) / pow((1 + pow((x[0] - 2) / 3, 2) + pow((x[1] - 2) / 3, 2)), 2) - 3 * 2 * (x[0] - 1) / pow((1 + pow((x[0] - 2) / 3, 2) + pow((x[1] - 2) / 3, 2)), 2));
+         grad[1] = -(-1 * 2 * ((x[1] - 2) / 3) / pow((1 + pow((x[0] - 2) / 3, 2) + pow((x[1] - 2) / 3, 2)), 2) - 3 * 2 * ((x[1] - 1) / 2) / pow((1 + pow((x[0] - 2) / 3, 2) + pow((x[1] - 2) / 3, 2)), 2));
+         return grad;
+      }
+   );
+   return a;
+}
 
 
 double scalar(const std::vector<double> &a, const std::vector<double> &b)
@@ -28,18 +87,17 @@ double mod(const std::vector<double> &a, const std::vector<double> &b)
       tmp[i] -= b[i];
    }
    return sqrt(scalar(tmp, tmp));
-
 }
 
-std::pair<double, double> findInterval(std::function<double(double)> &fun, double h)
+std::pair<double, double> findInterval(std::function<double(double)> &fun, double h, double a=0,size_t maxI = 100)
 {
-   double a0 = 0.0;
+   double a0 = a;
    double a1 = h;
 
    double f0 = fun(a0);
    double f1 = fun(a1);
-
-   while (true)
+   size_t count = 0;
+   while (count < maxI)
    {
       double a2 = 2 * a1;
       double f2 = fun(a2);
@@ -52,7 +110,9 @@ std::pair<double, double> findInterval(std::function<double(double)> &fun, doubl
 
       a1 = a2;
       f1 = f2;
+      count++;
    }
+   return std::pair<double, double>(0,0);
 }
 
 void setGrad(std::function<double(const std::vector<double> &)> fun, const std::vector<double> &x,std::vector<double> &grad)
@@ -133,7 +193,6 @@ std::pair<double,double> squareInt(std::pair<double, double> interval, double ep
             f3 = fr;
          }
       }
-      counter++;
    }
    return std::pair <double,double> (a2, a2);
 
@@ -177,7 +236,7 @@ std::vector<double> MSGFR
          stream << std::setprecision(16) << i << "\t";
       }
 
-      std::pair<double, double> interval = findInterval(layer, 0.5);
+      std::pair<double, double> interval = findInterval(layer, 0.2);
       a = squareInt(interval, leps, layer).second;
       if (a > 1.0) a = 1.0;
       if (a < 1e-8) a = 1e-8;
@@ -223,7 +282,6 @@ std::vector<double> MSGFR
          stream << i << "\t";
       }
 
-
       if (mod(cur,tmp) < eps)
       {
          break;
@@ -249,7 +307,7 @@ std::vector<double> MSGFR
       stream << std::endl;
    }
    while (gg > eps* eps && maxI > k);
-
+   stream << std::endl;
    for (auto &i : cur)
    {
       stream << std::setprecision(16) << i << "\t";
@@ -259,7 +317,7 @@ std::vector<double> MSGFR
 
    for (size_t i = 0; i < 7;i++)
    {
-      stream << "-" << "\t";
+      stream << "0" << "\t";
    }
 
    for (auto &i : grad)
@@ -268,7 +326,6 @@ std::vector<double> MSGFR
    }
    stream << std::endl;
    return cur;
-
 
 }
 
@@ -343,7 +400,7 @@ std::vector<double> Broiden
          stream << std::setprecision(16) << a << "\t";
       }
 
-      std::pair<double, double> interval = findInterval(layer, 0.5);
+      std::pair<double, double> interval = findInterval(layer, 0.2);
       double a = squareInt(interval, leps, layer).second;
       stream << std::setprecision(16) << a << "\t";
       std::vector < double> s(size, 0);
@@ -399,8 +456,6 @@ std::vector<double> Broiden
 
       stream << std::endl;
 
-
-
    }
 
    for (auto &a : cur)
@@ -411,13 +466,55 @@ std::vector<double> Broiden
 
    for (size_t i = 0; i < 7; i++)
    {
-      stream << "-" << "\t";
+      stream << "0" << "\t";
    }
 
    for (auto &a : grad)
    {
       stream << std::setprecision(16) << a << "\t";
    }
+   for (size_t i = 0; i < 4; i++)
+   {
+      stream << "0" << "\t";
+   }
    stream << std::endl;
    return cur;
 }
+
+
+std::vector<double> Gauss
+(
+   std::function<double(const std::vector<double> &)> fun,
+   const std::vector<double> &x0,
+   double eps, double leps, size_t maxI, std::ostream &stream
+)
+{
+   size_t iter = 0;
+   std::vector<double> x(x0);
+
+   std::vector<double> xp;
+   do
+   {
+      xp = x;
+      for (size_t j = 0; j < x.size(); j++)
+      {
+         std::function<double(double)> layer = [&](double lambda)
+            {
+               std::vector<double> res(x);
+               res[j] += lambda;
+               return fun(res);
+            };
+         std::pair<double, double> interval = findInterval(layer, 0.2,-0.2);
+         double a = Gold(interval, leps, layer).second;
+         x[j] += a;
+      }
+      iter++;
+      if(iter >= maxI)
+      {
+         break;
+      }
+   } while (mod(xp,x) > eps);
+   return x;
+}
+  
+

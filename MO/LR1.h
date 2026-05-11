@@ -5,13 +5,28 @@
 #include <numbers>
 #include <iostream>
 #include <iomanip>
+
+class NullBuffer : public std::streambuf
+{
+public:
+   int overflow(int c) override
+   {
+      return c;
+   }
+};
+
+inline std::ostream &nullStream()
+{
+   static NullBuffer buffer;
+   static std::ostream stream(&buffer);
+   return stream;
+}
 size_t counter = 0;
 //Дихотомия
 std::pair<double, double> Dih(std::pair<double, double> interval, double epsilon, std::function<double(double)> f, std::ostream &stream)
 {
    size_t n = std::log2((interval.second - interval.first) / epsilon) + 1 ;
    double delta = epsilon / 2;
-   std::cout << n << std::endl;
    std::pair<double, double> newIntr;
    for (size_t i = 0; i < n; i++)
    {
@@ -55,7 +70,6 @@ std::pair<double, double> Gold(std::pair<double, double> interval, double epsilo
       f(newIntr.first),
       f(newIntr.second)
    };
-   std::cout << n << std::endl;
    for (size_t i = 0; i < n; i++)
    {
       if(funV.first < funV.second)

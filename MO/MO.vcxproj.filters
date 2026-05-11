@@ -26,5 +26,11 @@
     <ClInclude Include="LR2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LR3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LR4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
